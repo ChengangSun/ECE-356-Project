@@ -51,6 +51,14 @@ class Client(cmd.Cmd):
                 print("userid: ", self.current_user_id)
             else:
                 print("Login Failed. Incorrect User/Password pair!!!")
+
+    def do_logout(self, arg):
+        if (self.current_user_id != None):
+            print("You have been logged out!")
+            self.current_user_id = None
+        else:
+            print("No one is logged in!")
+
 if __name__ == '__main__':
 
     Client().cmdloop()
