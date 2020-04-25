@@ -35,7 +35,7 @@ class Client(cmd.Cmd):
         print(birthday)
         self.cursor.execute("INSERT INTO Users VALUES(null,%s,%s,%s,%s,%s,now(),%s)", data)
         self.cnx.commit()
-        print("Signup successful! Congrats = %s", username)
+        print("Signup successful! Congrats = %s" % username)
 
     def do_login(self, arg):
         if self.current_user_id:
@@ -49,7 +49,7 @@ class Client(cmd.Cmd):
             print("Login Succeed. Welcome, {}!".format(username))
             self.cursor.execute("SELECT userID FROM Users WHERE alias = %s", (username,))
             self.current_user_id = self.cursor.fetchone()[0]
-            print("userid: ", self.current_user_id)
+            print("userid: %s" % self.current_user_id)
         else:
             print("Login Failed. Incorrect User/Password pair!!!")
 
@@ -78,7 +78,7 @@ class Client(cmd.Cmd):
             result = self.cursor.fetchone()
             if result:
                 topicid = result[0]
-                print("topicid: ", topicid)
+                print("topicid: %s" % topicid)
             else:
                 # Insert the topic if topic does not exist
                 self.cursor.execute("INSERT INTO Topics (topicID, topicName) VALUES (%s, %s);", (topicid, topic))
@@ -92,7 +92,7 @@ class Client(cmd.Cmd):
             if link:
                 self.cursor.execute("INSERT INTO Links VALUES (%s, %s);", (postid, link))
             self.cnx.commit()
-            print("Post successful! PostID = %s", postid)
+            print("Post successful! PostID = %s" % postid)
         except mysql.connector.Error as error:
             print("Create post failed with error: {}".format(error))
             self.cnx.rollback()
@@ -121,7 +121,7 @@ class Client(cmd.Cmd):
         if link:
             self.cursor.execute("INSERT INTO Links VALUES (%s, %s);", (postid, link))
         self.cnx.commit()
-        print("Reply successful! Reply PostID = %s", postid)
+        print("Reply successful! Reply PostID = %s" % postid)
 
     def do_get_single_post(self, args):
         if not self.current_user_id:
@@ -157,8 +157,7 @@ class Client(cmd.Cmd):
                             "ON DUPLICATE KEY UPDATE isUp = 1;",
                             (self.current_user_id, postid))
         self.cnx.commit()
-        print("Thumb up successful! PostID = %s", postid)
-
+        print("Thumb up successful! PostID = %s" % postid)
 
     def do_thumb_down(self, arg):
         if not self.current_user_id:
@@ -174,7 +173,7 @@ class Client(cmd.Cmd):
                             "ON DUPLICATE KEY UPDATE isUp = 0;",
                             (self.current_user_id, postid))
         self.cnx.commit()
-        print("Thumb down successful! PostID = %s", postid)
+        print("Thumb down successful! PostID = %s" % postid)
 
     def do_topics(self, arg):
         if (self.current_user_id == None):
@@ -229,7 +228,6 @@ class Client(cmd.Cmd):
             print("Following {}".format(topicname))
         else:
             print("Wrong answer pick user or topic!!!")
-            return
 
     def do_unfollow(self, arg):
         if not self.current_user_id:
@@ -252,7 +250,7 @@ class Client(cmd.Cmd):
             self.cursor.execute("DELETE FROM FollowsUser WHERE userID = %s and targetUserID = %s;",
                                 (self.current_user_id, result[0]))
             self.cnx.commit()
-            print("User %s unfollowed.", username)
+            print("User %s unfollowed." % username)
         elif temp == 'topic':
             topicname = input("Input the topic name: ")
             self.cursor.execute("SELECT topicID FROM Topics WHERE topicName = %s;", (topicname,))
@@ -269,7 +267,7 @@ class Client(cmd.Cmd):
             self.cursor.execute("DELETE FROM FollowsTopic WHERE userID = %s and topicID = %s;",
                                 (self.current_user_id, result[0]))
             self.cnx.commit()
-            print("Topic %s unfollowed.", topicname)
+            print("Topic %s unfollowed." % topicname)
         else:
             print("Wrong answer pick user or topic!!!")
             return
@@ -289,7 +287,7 @@ class Client(cmd.Cmd):
         self.cursor.execute("INSERT INTO Members (groupID, userID, role) VALUES (%s, %s, %s);",
                             (self.cursor.lastrowid, self.current_user_id, 'creator'))
         self.cnx.commit()
-        print("Create successful! Group name = %s", groupname)
+        print("Create successful! Group name = %s" % groupname)
 
 
     def do_join_group(self, arg):
@@ -303,11 +301,6 @@ class Client(cmd.Cmd):
         if not result:
             print("Sorry, group not found")
             return
-        # self.cursor.execute("SELECT groupID FROM Members WHERE userID = %s and groupID = %s;", (self.current_user_id, result[0]))
-        # result1 = self.cursor.fetchone()
-        # if result1:
-        #     print("You are already in the group")
-        #     return
         if role:
             self.cursor.execute("INSERT IGNORE INTO Members (groupID, userID, role) VALUES (%s, %s, %s);",
                                 (result[0], self.current_user_id, role))
@@ -315,7 +308,7 @@ class Client(cmd.Cmd):
             self.cursor.execute("INSERT IGNORE INTO Members (groupID, userID) VALUES (%s, %s);",
                                 (result[0], self.current_user_id))
         self.cnx.commit()
-        print("Join successful! Group name = %s", groupname)
+        print("Join successful! Group name = %s" % groupname)
 
 
     def do_delete_group(self, arg):
@@ -337,7 +330,7 @@ class Client(cmd.Cmd):
         # delete rows in member table
         self.cursor.execute("DELETE FROM Members WHERE groupID = %s;", (result[1],))
         self.cnx.commit()
-        print("Delete successful! Group name = %s", groupname)
+        print("Delete successful! Group name = %s" % groupname)
 
 
     def do_quit_group(self, arg):
@@ -365,7 +358,7 @@ class Client(cmd.Cmd):
         self.cursor.execute("DELETE FROM Members WHERE groupID = %s and userID = %s;",
                             (result[1], self.current_user_id))
         self.cnx.commit()
-        print("Quit successful! Group name = %s", groupname)
+        print("Quit successful! Group name = %s" % groupname)
 
 
 if __name__ == '__main__':
