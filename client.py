@@ -439,6 +439,20 @@ class Client(cmd.Cmd):
             print("Wrong answer pick user or topic!!!")
             return
 
+    def do_get_my_groups(self, arg):
+        if not self.current_user_id:
+            print("Please log in first")
+            return
+        self.cursor.execute("SELECT groupName, role FROM UserGroups ug INNER JOIN Members m ON ug.groupID = m.groupID "
+                            "WHERE userID = %s", (self.current_user_id,))
+        results = self.cursor.fetchall()
+        if not results:
+            print("You are not in any groups.")
+            return
+        print("Your groups:")
+        for result in results:
+            print("You are a(n) %s in %s" % (result[1], result[0]))
+
     def do_create_group(self, arg):
         if not self.current_user_id:
             print("Please log in first")
