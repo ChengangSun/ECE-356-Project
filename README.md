@@ -1,4 +1,10 @@
 # ECE-356-Project
+BY:
+
+Sean He 20662918 
+
+Chengang Sun 20658073
+
 
 ## Functions:
 
