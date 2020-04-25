@@ -23,14 +23,43 @@ class Client(cmd.Cmd):
         if self.current_user_id:
             print("Please log out first")
             return
-        username = input("Username (can't be empty): ")
+        # check if user name already exist
+        namecheck = 0
+        while namecheck == 0:
+            username = input("Username (can't be empty): ")
+            self.cursor.execute("SELECT userID FROM Users WHERE alias = %s", (username,))
+            if not self.cursor.fetchone():
+                namecheck = 1
+            else:
+                print("User name already exist. Please pick a new one")
         password = input("Password (can't be empty): ")
         email = input("Email: ")
-        gender = input("Gender: ")
+        # check gender requirement
+        gendercheck = 0
+        while gendercheck == 0:
+            gender = input("Gender: (MALE/FEMALE/OTHER OR empty)")
+            if gender == "MALE" or gender == "FEMALE" or gender == "other" or (not gender):
+                gendercheck = 1
+            else:
+                print("Gender unclear. Please re-enter.")
         occupation = input("Occupation: ")
-        date_entry = input('Enter a date in YYYY-MM-DD format (cant be empty): ')
-        year, month, day = map(int, date_entry.split('-'))
-        birthday = datetime.date(year, month, day)
+        # check if birth date is empty or wrong format
+        datecheck = 0
+        year = month = day = 0
+        birthday = datetime.date.today()
+        while datecheck == 0:
+            date_entry = input('Enter a date in YYYY-MM-DD format: ')
+            if date_entry:
+                try:
+                    year, month, day = map(int, date_entry.split('-'))
+                except ValueError:
+                    year = month = day = 0
+            if 1900 < year and 0 < month < 13 and 0 < day < 32:
+                birthday = datetime.date(year, month, day)
+            if birthday < datetime.date.today():
+                datecheck = 1
+            if datecheck == 0:
+                print("Format wrong. Please input correct date!")
         data = (username, email, gender, password, birthday, occupation)
         print(birthday)
         self.cursor.execute("INSERT INTO Users VALUES(null,%s,%s,%s,%s,%s,now(),%s)", data)
