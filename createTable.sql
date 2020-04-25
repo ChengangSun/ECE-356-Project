@@ -20,7 +20,7 @@ DROP TABLE IF EXISTS Topics;
 CREATE TABLE Topics (
     topicID INT NOT NULL AUTO_INCREMENT,
     topicName VARCHAR (50),
-    parentID INT,
+    parentID INT DEFAULT null,
     PRIMARY KEY (topicID)
 );
 
@@ -37,30 +37,37 @@ DROP TABLE IF EXISTS Members;
 CREATE TABLE Members(
     groupID INT,
     userID INT,
-    role VARCHAR(50),
+    role VARCHAR(50) DEFAULT 'member',
     PRIMARY KEY (groupID, userID),
     FOREIGN KEY (groupID) REFERENCES UserGroups(groupID),
     FOREIGN KEY (userID) REFERENCES Users(userID)
 );
 
-DROP TABLE IF EXISTS Follows;
-CREATE TABLE Follows (
+DROP TABLE IF EXISTS FollowsUser;
+CREATE TABLE FollowsUser (
     userID INT,
-    targetUserID INT DEFAULT -1,
-    topicID INT DEFAULT -1,
-    PRIMARY KEY (userID, targetUserID, topicID),
-    FOREIGN KEY (userID) REFERENCES Users(userID),
+    targetUserID INT,
+    PRIMARY KEY (userID, targetUserID),
+    FOREIGN KEY (userID) REFERENCES Users(userID)
+);
+
+DROP TABLE IF EXISTS FollowsTopic;
+CREATE TABLE FollowsTopic (
+    userID INT,
+    topicID INT,
+    PRIMARY KEY (userID, topicID),
     FOREIGN KEY (topicID) REFERENCES Topics(topicID)
 );
+
 
 DROP TABLE IF EXISTS Posts;
 CREATE TABLE Posts (
     postID INT NOT NULL AUTO_INCREMENT,
     post TEXT,
-    postTime DATETIME,
+    postTime DATETIME DEFAULT now(),
     userID INT,
     topicID INT,
-    parentID INT,
+    parentID INT DEFAULT null,
     PRIMARY KEY (postID),
     FOREIGN KEY (userID) REFERENCES Users(userID),
     FOREIGN KEY (topicID) REFERENCES Topics(topicID)
@@ -82,14 +89,6 @@ CREATE TABLE Links (
     FOREIGN KEY (postID) REFERENCES Posts(postID)
 );
 
-DROP TABLE IF EXISTS ReadPost;
-CREATE TABLE ReadPost (
-    userID INT,
-    postID INT,
-    PRIMARY KEY (userID, postID),
-    FOREIGN KEY (userID) REFERENCES Users(userID),
-    FOREIGN KEY (postID) REFERENCES Posts(postID)
-);
 DROP TABLE IF EXISTS Seens;
 CREATE TABLE Seens (
     userID INT,
