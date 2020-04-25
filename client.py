@@ -475,7 +475,21 @@ class Client(cmd.Cmd):
             print("Please log in first")
             return
         groupname = input("Please enter the group name: ")
-        role = input("Please enter role: ")
+        # check if the user is creator of the group, it he is, block this action
+        self.cursor.execute("SELECT creatorID FROM UserGroups WHERE groupName = %s and creatorID = %s;",
+                            (groupname, self.current_user_id))
+        temp = self.cursor.fetchone()
+        if temp:
+            print("You are the creator. Illegal action blocked!")
+            return
+        # check role. It mustn't be creator
+        rolecheck = 0
+        while rolecheck == 0:
+            role = input("Please enter role: ")
+            if rolecheck != "Creator":
+                rolecheck = 1
+            else:
+                print("Your role can't be creator. Please change.")
         self.cursor.execute("SELECT groupID FROM UserGroups WHERE groupName = %s;", (groupname,))
         result = self.cursor.fetchone()
         if not result:
