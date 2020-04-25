@@ -33,7 +33,7 @@ class Client(cmd.Cmd):
         birthday = datetime.date(year, month, day)
         data = (username, email, gender, password, birthday, occupation)
         print(birthday)
-        self.cursor.execute("INSERT INTO Users VALUES(null,%s,%s,%s,%s,%s,now(),%s)", data)
+        self.cursor.execute("INSERT IGNORE INTO Users VALUES(null,%s,%s,%s,%s,%s,now(),%s)", data)
         self.cnx.commit()
 
     def do_login(self, arg):
