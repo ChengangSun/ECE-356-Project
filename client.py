@@ -20,8 +20,8 @@ class Client(cmd.Cmd):
         self.current_user_id = None
 
     def do_signup(self, arg):
-        if(self.current_user_id != None):
-            print("Please log out first" )
+        if not self.current_user_id:
+            print("Please log in first")
             return
         username = input("Username (can't be empty): ")
         password = input("Password (can't be empty): ")
@@ -35,16 +35,17 @@ class Client(cmd.Cmd):
         print(birthday)
         self.cursor.execute("INSERT INTO Users VALUES(null,%s,%s,%s,%s,%s,now(),%s)", data)
         self.cnx.commit()
+        print("Signup successful! Congrats = %s", username)
 
     def do_login(self, arg):
-        if (self.current_user_id != None):
-            print("Please log out first")
+        if not self.current_user_id:
+            print("Please log in first")
             return
         username = input("Username (can't be empty): ")
         password = input("Password (can't be empty): ")
-        self.cursor.execute("SELECT hash FROM Users WHERE alias = %s", (username,))
+        self.cursor.execute("SELECT password FROM Users WHERE alias = %s", (username,))
         realpassword = self.cursor.fetchone()
-        if realpassword != None and password == realpassword[0]:
+        if realpassword and password == realpassword[0]:
             print("Login Succeed. Welcome, {}!".format(username))
             self.cursor.execute("SELECT userID FROM Users WHERE alias = %s", (username,))
             self.current_user_id = self.cursor.fetchone()[0]
@@ -53,14 +54,14 @@ class Client(cmd.Cmd):
             print("Login Failed. Incorrect User/Password pair!!!")
 
     def do_logout(self, arg):
-        if (self.current_user_id == None):
-            print("No one is logged in!")
+        if not self.current_user_id:
+            print("Please log in first")
             return
         print("You have been logged out!")
         self.current_user_id = None
 
-    def do_createpost(self, arg):
-        if (self.current_user_id == None):
+    def do_create_post(self, arg):
+        if not self.current_user_id:
             print("Please log in first")
             return
         topic = input("Input your post topic: ")
@@ -91,18 +92,19 @@ class Client(cmd.Cmd):
             if link:
                 self.cursor.execute("INSERT INTO Links VALUES (%s, %s);", (postid, link))
             self.cnx.commit()
+            print("Post successful! PostID = %s", postid)
         except mysql.connector.Error as error:
             print("Create post failed with error: {}".format(error))
             self.cnx.rollback()
 
-    def do_createreply(self, arg):
-        if (self.current_user_id == None):
+    def do_create_reply(self, arg):
+        if not self.current_user_id:
             print("Please log in first")
             return
         postid = input("ID of the post you want to reply to: ")
         self.cursor.execute("SELECT topicID FROM Posts WHERE postID = %s;", (postid,))
         result = self.cursor.fetchone()
-        if (not result):
+        if not result:
             print("Sorry post doesn't exit!")
             return
         content = input("Input your post content: ")
@@ -119,9 +121,10 @@ class Client(cmd.Cmd):
         if link:
             self.cursor.execute("INSERT INTO Links VALUES (%s, %s);", (postid, link))
         self.cnx.commit()
+        print("Reply successful! Reply PostID = %s", postid)
 
-    def do_thumbup(self, arg):
-        if (self.current_user_id == None):
+    def do_thumb_up(self, arg):
+        if not self.current_user_id:
             print("Please log in first")
             return
         postid = input("ID of the post you want to thumb up: ")
@@ -134,9 +137,11 @@ class Client(cmd.Cmd):
                             "ON DUPLICATE KEY UPDATE isUp = 1;",
                             (self.current_user_id, postid))
         self.cnx.commit()
+        print("Thumb up successful! PostID = %s", postid)
 
-    def do_thumbdown(self, arg):
-        if (self.current_user_id == None):
+
+    def do_thumb_down(self, arg):
+        if not self.current_user_id:
             print("Please log in first")
             return
         postid = input("ID of the post you want to thumb down: ")
@@ -149,9 +154,10 @@ class Client(cmd.Cmd):
                             "ON DUPLICATE KEY UPDATE isUp = 0;",
                             (self.current_user_id, postid))
         self.cnx.commit()
+        print("Thumb down successful! PostID = %s", postid)
 
     def do_follow(self, arg):
-        if (self.current_user_id == None):
+        if not self.current_user_id:
             print("Please log in first")
             return
         temp = input("Follow user or Follow topic? \n")
@@ -159,29 +165,29 @@ class Client(cmd.Cmd):
             username = input("Input the user name: ")
             self.cursor.execute("SELECT userID FROM Users WHERE alias = %s;", (username,))
             result = self.cursor.fetchone()
-            if result == None:
+            if not result:
                 print("User not found")
                 return
             self.cursor.execute("INSERT IGNORE INTO FollowsUser (userID, targetUserID) VALUES (%s, %s);",
                                 (self.current_user_id, result[0]))
-            print("Following {}".format(username))
             self.cnx.commit()
+            print("Following {}".format(username))
         elif temp == 'topic':
             topicname = input("Input the topic name: ")
             self.cursor.execute("SELECT topicID FROM Topics WHERE topicName = %s;", (topicname,))
             result = self.cursor.fetchone()
-            if result == None:
+            if not result:
                 print("Topic not found")
                 return
             self.cursor.execute("INSERT IGNORE INTO FollowsTopic (userID, topicID) VALUES (%s, %s);",
                                 (self.current_user_id, result[0]))
-            print("Following {}".format(topicname))
             self.cnx.commit()
+            print("Following {}".format(topicname))
         else:
             print("Wrong answer pick user or topic!!!")
 
-    def do_creategroup(self, arg):
-        if (self.current_user_id == None):
+    def do_create_group(self, arg):
+        if not self.current_user_id:
             print("Please log in first")
             return
         groupname = input("Please enter the group name: ")
@@ -195,16 +201,18 @@ class Client(cmd.Cmd):
         self.cursor.execute("INSERT INTO Members (groupID, userID, role) VALUES (%s, %s, %s);",
                             (self.cursor.lastrowid, self.current_user_id, 'creator'))
         self.cnx.commit()
+        print("Create successful! Group name = %s", groupname)
 
-    def do_joingroup(self, arg):
-        if (self.current_user_id == None):
+
+    def do_join_group(self, arg):
+        if not self.current_user_id:
             print("Please log in first")
             return
         groupname = input("Please enter the group name: ")
         role = input("Please enter role: ")
         self.cursor.execute("SELECT groupID FROM UserGroups WHERE groupName = %s;", (groupname,))
         result = self.cursor.fetchone()
-        if (not result):
+        if not result:
             print("Sorry, group not found")
             return
         # self.cursor.execute("SELECT groupID FROM Members WHERE userID = %s and groupID = %s;", (self.current_user_id, result[0]))
@@ -219,6 +227,58 @@ class Client(cmd.Cmd):
             self.cursor.execute("INSERT IGNORE INTO Members (groupID, userID) VALUES (%s, %s);",
                                 (result[0], self.current_user_id))
         self.cnx.commit()
+        print("Join successful! Group name = %s", groupname)
+
+
+    def do_delete_group(self, arg):
+        if not self.current_user_id:
+            print("Please log in first")
+            return
+        groupname = input("Please enter the group name to be deleted: ")
+        self.cursor.execute("SELECT creatorID, groupID FROM UserGroups WHERE groupName = %s;", (groupname,))
+        result = self.cursor.fetchone()
+        if not result:
+            print("Sorry, group not found")
+            return
+        # check if the user created/owns the group
+        if result[0] != self.current_user_id:
+            print("Sorry, you don't own this group!")
+            return
+        # delete row in usergroup table
+        self.cursor.execute("DELETE FROM UserGroups WHERE groupName = %s;", (groupname,))
+        # delete rows in member table
+        self.cursor.execute("DELETE FROM Members WHERE groupID = %s;", (result[1],))
+        self.cnx.commit()
+        print("Delete successful! Group name = %s", groupname)
+
+
+    def do_quit_group(self, arg):
+        if not self.current_user_id:
+            print("Please log in first")
+            return
+        groupname = input("Please enter the group name (quit): ")
+        self.cursor.execute("SELECT creatorID, groupID FROM UserGroups WHERE groupName = %s;", (groupname,))
+        result = self.cursor.fetchone()
+        if not result:
+            print("Sorry, group not found")
+            return
+        # check if the user created/owns the group
+        if result[0] == self.current_user_id:
+            print("Sorry, you created/own this group. You can't quit but delete the group.")
+            return
+        # check if the user is in the group
+        self.cursor.execute("SELECT userID FROM UserGroups WHERE groupID = %s and userID = %s;",
+                            (result[1], self.current_user_id))
+        result1 = self.cursor.fetchone()
+        if not result1:
+            print("Sorry, you are not in this group!")
+            return
+        # delete row in member table
+        self.cursor.execute("DELETE FROM Members WHERE groupID = %s and userID = %s;",
+                            (result[1], self.current_user_id))
+        self.cnx.commit()
+        print("Quit successful! Group name = %s", groupname)
+
 
 if __name__ == '__main__':
     Client().cmdloop()
