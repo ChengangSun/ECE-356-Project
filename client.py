@@ -185,6 +185,50 @@ class Client(cmd.Cmd):
             print("Following {}".format(topicname))
         else:
             print("Wrong answer pick user or topic!!!")
+            return
+
+    def do_unfollow(self, arg):
+        if not self.current_user_id:
+            print("Please log in first")
+            return
+        temp = input("Unfollow user or unfollow topic? \n")
+        if temp == 'User':
+            username = input("Input the user name: ")
+            self.cursor.execute("SELECT userID FROM Users WHERE alias = %s;", (username,))
+            result = self.cursor.fetchone()
+            if not result:
+                print("User not found")
+                return
+            self.cursor.execute("SELECT userID FROM FollowsUser WHERE userID = %s and targetUserID = %s;",
+                                (self.current_user_id, result[0]))
+            result1 = self.cursor.fetchone()
+            if not result1:
+                print("User not followed yet")
+                return
+            self.cursor.execute("DELETE FROM FollowsUser WHERE userID = %s and targetUserID = %s;",
+                                (self.current_user_id, result[0]))
+            self.cnx.commit()
+            print("User %s unfollowed.", username)
+        elif temp == 'topic':
+            topicname = input("Input the topic name: ")
+            self.cursor.execute("SELECT topicID FROM Topics WHERE topicName = %s;", (topicname,))
+            result = self.cursor.fetchone()
+            if not result:
+                print("Topic not found")
+                return
+            self.cursor.execute("SELECT userID FROM FollowsTopic WHERE userID = %s and topicID = %s;",
+                                (self.current_user_id, result[0]))
+            result1 = self.cursor.fetchone()
+            if not result1:
+                print("Topic not followed yet")
+                return
+            self.cursor.execute("DELETE FROM FollowsTopic WHERE userID = %s and topicID = %s;",
+                                (self.current_user_id, result[0]))
+            self.cnx.commit()
+            print("Topic %s unfollowed.", topicname)
+        else:
+            print("Wrong answer pick user or topic!!!")
+            return
 
     def do_create_group(self, arg):
         if not self.current_user_id:
