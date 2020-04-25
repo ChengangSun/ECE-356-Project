@@ -6,7 +6,7 @@ import mysql.connector
 
 class Client(cmd.Cmd):
     intro = 'Welcome to our social Network app. Type help or ? to list commands.\n'
-    prompt = '(social network client)'
+    prompt = '(social network client): '
 
     cnx = mysql.connector.connect(
         host="18.234.70.125",
@@ -28,7 +28,7 @@ class Client(cmd.Cmd):
         email = input("Email: ")
         gender = input("Gender: ")
         occupation = input("Occupation: ")
-        date_entry = input('Enter a date in YYYY-MM-DD format: ')
+        date_entry = input('Enter a date in YYYY-MM-DD format (cant be empty): ')
         year, month, day = map(int, date_entry.split('-'))
         birthday = datetime.date(year, month, day)
         data = (username, email, gender, password, birthday, occupation)
@@ -72,7 +72,7 @@ class Client(cmd.Cmd):
             print("topic and content mandatory")
             return
         try:
-            ## find topic
+            # find topic
             topicid = None
             self.cursor.execute("SELECT topicID FROM Topics WHERE topicName = %s;", (topic,))
             result = self.cursor.fetchone()
@@ -80,7 +80,7 @@ class Client(cmd.Cmd):
                 topicid = result[0]
                 print("topicid: ", topicid)
             else:
-                # Insert the topic is topic does not exist
+                # Insert the topic if topic does not exist
                 self.cursor.execute("INSERT INTO Topics (topicID, topicName) VALUES (%s, %s);", (topicid, topic))
                 topicid = self.cursor.lastrowid
                 print("New topic created: ", topicid, topic)
