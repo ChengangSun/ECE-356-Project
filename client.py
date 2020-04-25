@@ -263,7 +263,7 @@ class Client(cmd.Cmd):
             print("Please log in first")
             return
         temp = input("Unfollow user or unfollow topic? \n")
-        if temp == 'User':
+        if temp == 'user':
             username = input("Input the user name: ")
             self.cursor.execute("SELECT userID FROM Users WHERE alias = %s;", (username,))
             result = self.cursor.fetchone()
@@ -354,10 +354,11 @@ class Client(cmd.Cmd):
         if result[0] != self.current_user_id:
             print("Sorry, you don't own this group!")
             return
-        # delete row in usergroup table
-        self.cursor.execute("DELETE FROM UserGroups WHERE groupName = %s;", (groupname,))
         # delete rows in member table
         self.cursor.execute("DELETE FROM Members WHERE groupID = %s;", (result[1],))
+        # delete row in usergroup table
+        self.cursor.execute("DELETE FROM UserGroups WHERE groupID = %s;", (result[1],))
+
         self.cnx.commit()
         print("Delete successful! Group name = %s" % groupname)
 
@@ -377,7 +378,7 @@ class Client(cmd.Cmd):
             print("Sorry, you created/own this group. You can't quit but delete the group.")
             return
         # check if the user is in the group
-        self.cursor.execute("SELECT userID FROM UserGroups WHERE groupID = %s and userID = %s;",
+        self.cursor.execute("SELECT userID FROM Members WHERE groupID = %s and userID = %s;",
                             (result[1], self.current_user_id))
         result1 = self.cursor.fetchone()
         if not result1:
