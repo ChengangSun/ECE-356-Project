@@ -23,7 +23,15 @@ class Client(cmd.Cmd):
         if self.current_user_id:
             print("Please log out first")
             return
-        username = input("Username (can't be empty): ")
+        # check if user name already exist
+        namecheck = 0
+        while namecheck == 0:
+            username = input("Username (can't be empty): ")
+            self.cursor.execute("SELECT userID FROM Users WHERE alias = %s", (username,))
+            if not self.cursor.fetchone():
+                namecheck = 1
+            else:
+                print("User name already exist. Please pick a new one")
         password = input("Password (can't be empty): ")
         email = input("Email: ")
         gender = input("Gender: ")
