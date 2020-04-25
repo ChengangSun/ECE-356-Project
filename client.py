@@ -150,6 +150,30 @@ class Client(cmd.Cmd):
                             (self.current_user_id, postid))
         self.cnx.commit()
 
+    def do_topics(self, arg):
+        if (self.current_user_id == None):
+            print("Please log in first")
+            return
+        print("Navigate all Topics")
+        self.cursor.execute("SELECT topicID, topicName FROM Topics WHERE parentID IS null")
+        topics = self.cursor.fetchall()
+        while(topics):
+            for topic in topics:
+                print(topic[1])
+            selection = input("Choose a topic to navigate to: ")
+            selectionID = None
+            for topic in topics:
+                if (selection == topic[1]):
+                    selectionID = topic[0]
+                    break
+            if not selectionID:
+                print("invalid choice")
+                return
+            self.cursor.execute("SELECT topicID, topicName FROM Topics WHERE parentID = %s", (selectionID,))
+            topics = self.cursor.fetchall()
+            print ("Subtopics of {}:".format(selection))
+        print("No subtopics!")
+
     def do_follow(self, arg):
         if (self.current_user_id == None):
             print("Please log in first")
