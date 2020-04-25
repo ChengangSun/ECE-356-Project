@@ -3,7 +3,6 @@ import datetime
 import mysql.connector
 
 
-
 class Client(cmd.Cmd):
     intro = 'Welcome to our social Network app. Type help or ? to list commands.\n'
     prompt = '(social network client): '
@@ -37,7 +36,7 @@ class Client(cmd.Cmd):
         # check gender requirement
         gendercheck = 0
         while gendercheck == 0:
-            gender = input("Gender: (MALE/FEMALE/OTHER OR empty)")
+            gender = input("Gender(MALE/FEMALE/OTHER OR empty): ")
             if gender == "MALE" or gender == "FEMALE" or gender == "other" or (not gender):
                 gendercheck = 1
             else:
