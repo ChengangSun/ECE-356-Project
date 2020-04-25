@@ -6,10 +6,10 @@ USE social_network;
 DROP TABLE IF EXISTS Users;
 CREATE TABLE Users (
     userID INT NOT NULL AUTO_INCREMENT,
-    alias VARCHAR (50),
+    alias VARCHAR (50) UNIQUE,
     email VARCHAR (50),
     gender VARCHAR (50),
-    hash VARCHAR (50),
+    password VARCHAR (50),
     birthDate DATE,
     lastLoginDateTime DATETIME,
     occupation VARCHAR(50),
@@ -19,7 +19,7 @@ CREATE TABLE Users (
 DROP TABLE IF EXISTS Topics;
 CREATE TABLE Topics (
     topicID INT NOT NULL AUTO_INCREMENT,
-    topicName VARCHAR (50),
+    topicName VARCHAR (50) UNIQUE,
     parentID INT DEFAULT null,
     PRIMARY KEY (topicID)
 );
@@ -27,7 +27,7 @@ CREATE TABLE Topics (
 DROP TABLE IF EXISTS UserGroups;
 CREATE TABLE UserGroups(
     groupID INT NOT NULL AUTO_INCREMENT,
-    groupName VARCHAR (50),
+    groupName VARCHAR (50) UNIQUE,
     creatorID INT,
     PRIMARY KEY (groupID),
     FOREIGN KEY (creatorID) REFERENCES Users(userID)
@@ -107,3 +107,22 @@ CREATE TABLE Thumb_up_downs (
     FOREIGN KEY (userID) REFERENCES Users(userID),
     FOREIGN KEY (postID) REFERENCES Posts(postID)
 );
+
+-- VIEWS
+
+DROP VIEW IF EXISTS view_post_points;
+CREATE VIEW view_post_points AS
+  SELECT p.postID, SUM(
+    CASE tud.isUp
+      WHEN 1 THEN 1
+      WHEN 0 THEN -1
+      ELSE 0
+    END
+  ) as points FROM Posts p LEFT JOIN Thumb_up_downs tud ON p.postID = tud.postID GROUP BY p.postID;
+ 
+DROP VIEW IF EXISTS view_post;
+CREATE VIEW view_post AS
+  SELECT p.postID, p.post, p.postTime, u.alias, t.topicName, p.parentID, vpp.points
+    FROM Posts p INNER JOIN Topics t ON p.topicID = t.topicID
+    INNER JOIN Users u ON p.userID = u.userID
+    INNER JOIN view_post_points vpp ON p.postID = vpp.postID;

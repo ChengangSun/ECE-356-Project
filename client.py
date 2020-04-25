@@ -20,8 +20,8 @@ class Client(cmd.Cmd):
         self.current_user_id = None
 
     def do_signup(self, arg):
-        if not self.current_user_id:
-            print("Please log in first")
+        if self.current_user_id:
+            print("Please log out first")
             return
         username = input("Username (can't be empty): ")
         password = input("Password (can't be empty): ")
@@ -38,8 +38,8 @@ class Client(cmd.Cmd):
         print("Signup successful! Congrats = %s", username)
 
     def do_login(self, arg):
-        if not self.current_user_id:
-            print("Please log in first")
+        if self.current_user_id:
+            print("Please log out first")
             return
         username = input("Username (can't be empty): ")
         password = input("Password (can't be empty): ")
@@ -123,6 +123,26 @@ class Client(cmd.Cmd):
         self.cnx.commit()
         print("Reply successful! Reply PostID = %s", postid)
 
+    def do_get_single_post(self, args):
+        if not self.current_user_id:
+            print("Please log in first")
+            return
+        postid = input("ID of the post you want to see: ")
+        #postID, post, postTime, alias, topicName, parentID, points
+        self.cursor.execute("SELECT * FROM view_post WHERE postID = %s", (postid,))
+        result = self.cursor.fetchone()
+        if not result:
+            print("Post does not exist")
+            return
+        print("Topic: %s" % result[4])
+        print("Author: %s" % result[3])
+        print("Post Time: %s" % result[2])
+        if (result[5]): 
+            print("Reply to: %s" % result[5])
+        print("Content: %s" % result[1])
+        print("Points: %s" % result[6])
+        
+ 
     def do_thumb_up(self, arg):
         if not self.current_user_id:
             print("Please log in first")

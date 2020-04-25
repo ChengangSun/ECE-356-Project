@@ -9,7 +9,7 @@ INSERT INTO Users (alias, email, gender, password, birthDate, lastLoginDateTime,
   ('Harry', 'thomasj@yahoo.ca', 'Male', 'Harry1', '1998-11-19', now(), 'Carpenter'),
   ('Ford', 'seemant@me.com', 'Female', 'Ford1', '1998-01-01', now(), 'Doctor');
 
-INSERT INTO Topics (topicName) VALUES ('Politics', 'American Politics', 'Canadian Politics'), ('Food');
+INSERT INTO Topics (topicName) VALUES ('Politics'), ('American Politics'), ('Canadian Politics'), ('Food');
 UPDATE Topics, (SELECT topicId FROM Topics WHERE topicName = 'Politics') as pol
   SET parentID = pol.topicID
   WHERE topicName IN ('American Politics', 'Canadian Politics');
