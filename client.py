@@ -33,7 +33,7 @@ class Client(cmd.Cmd):
         birthday = datetime.date(year, month, day)
         data = (username, email, gender, password, birthday, occupation)
         print(birthday)
-        self.cursor.execute("INSERT IGNORE INTO Users VALUES(null,%s,%s,%s,%s,%s,now(),%s)", data)
+        self.cursor.execute("INSERT INTO Users VALUES(null,%s,%s,%s,%s,%s,now(),%s)", data)
         self.cnx.commit()
 
     def do_login(self, arg):
@@ -162,7 +162,7 @@ class Client(cmd.Cmd):
             if result == None:
                 print("User not found")
                 return
-            self.cursor.execute("INSERT INTO FollowsUser (userID, targetUserID) VALUES (%s, %s);",
+            self.cursor.execute("INSERT IGNORE INTO FollowsUser (userID, targetUserID) VALUES (%s, %s);",
                                 (self.current_user_id, result[0]))
             print("Following {}".format(username))
             self.cnx.commit()
@@ -173,7 +173,7 @@ class Client(cmd.Cmd):
             if result == None:
                 print("Topic not found")
                 return
-            self.cursor.execute("INSERT INTO FollowsTopic (userID, topicID) VALUES (%s, %s);",
+            self.cursor.execute("INSERT IGNORE INTO FollowsTopic (userID, topicID) VALUES (%s, %s);",
                                 (self.current_user_id, result[0]))
             print("Following {}".format(topicname))
             self.cnx.commit()
@@ -207,16 +207,16 @@ class Client(cmd.Cmd):
         if (not result):
             print("Sorry, group not found")
             return
-        self.cursor.execute("SELECT groupID FROM Members WHERE userID = %s and groupID = %s;", (self.current_user_id, result[0]))
-        result1 = self.cursor.fetchone()
-        if result1:
-            print("You are already in the group")
-            return
+        # self.cursor.execute("SELECT groupID FROM Members WHERE userID = %s and groupID = %s;", (self.current_user_id, result[0]))
+        # result1 = self.cursor.fetchone()
+        # if result1:
+        #     print("You are already in the group")
+        #     return
         if role:
-            self.cursor.execute("INSERT INTO Members (groupID, userID, role) VALUES (%s, %s, %s);",
+            self.cursor.execute("INSERT IGNORE INTO Members (groupID, userID, role) VALUES (%s, %s, %s);",
                                 (result[0], self.current_user_id, role))
         else:
-            self.cursor.execute("INSERT INTO Members (groupID, userID) VALUES (%s, %s);",
+            self.cursor.execute("INSERT IGNORE INTO Members (groupID, userID) VALUES (%s, %s);",
                                 (result[0], self.current_user_id))
         self.cnx.commit()
 
