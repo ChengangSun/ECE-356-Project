@@ -50,7 +50,10 @@ class Client(cmd.Cmd):
         while datecheck == 0:
             date_entry = input('Enter a date in YYYY-MM-DD format: ')
             if date_entry:
-                year, month, day = map(int, date_entry.split('-'))
+                try:
+                    year, month, day = map(int, date_entry.split('-'))
+                except ValueError:
+                    year = month = day = 0
             if 1900 < year and 0 < month < 13 and 0 < day < 32:
                 birthday = datetime.date(year, month, day)
             if birthday < datetime.date.today():
