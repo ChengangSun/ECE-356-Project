@@ -122,7 +122,7 @@ CREATE VIEW view_post_points AS
  
 DROP VIEW IF EXISTS view_post;
 CREATE VIEW view_post AS
-  SELECT p.postID, p.post, p.postTime, u.alias, t.topicName, p.parentID, vpp.points
+  SELECT p.postID, p.post, p.postTime, u.alias, t.topicName, p.parentID, vpp.points, t.topicID, u.userID
     FROM Posts p INNER JOIN Topics t ON p.topicID = t.topicID
     INNER JOIN Users u ON p.userID = u.userID
     INNER JOIN view_post_points vpp ON p.postID = vpp.postID;
