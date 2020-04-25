@@ -163,6 +163,7 @@ class Client(cmd.Cmd):
         if not result:
             print("Post does not exist")
             return
+        print("PostID: %s" % result[0])
         print("Topic: %s" % result[4])
         print("Author: %s" % result[3])
         print("Post Time: %s" % result[2])
@@ -170,8 +171,126 @@ class Client(cmd.Cmd):
             print("Reply to: %s" % result[5])
         print("Content: %s" % result[1])
         print("Points: %s" % result[6])
-        
- 
+        self.cursor.execute("INSERT IGNORE INTO Seens (userID, postID) VALUES (%s, %s)",
+                            (self.current_user_id, result[0]))
+        self.cnx.commit()
+
+    def do_get_user_posts(self, args):
+        if not self.current_user_id:
+            print("Please log in first")
+            return
+        username = input("username of the user you want to see: ")
+        self.cursor.execute("SELECT * FROM Users WHERE alias = %s", (username,))
+        if not self.cursor.fetchone():
+            print("User does not exist")
+            return
+        self.cursor.execute("SELECT * FROM view_post WHERE alias = %s", (username,))
+        posts = self.cursor.fetchall()
+        if not posts:
+            print("User has no posts")
+        for post in posts:
+            print("PostID: %s" % post[0])
+            print("Topic: %s" % post[4])
+            print("Author: %s" % post[3])
+            print("Post Time: %s" % post[2])
+            if (post[5]): 
+                print("Reply to: %s" % post[5])
+            print("Content: %s" % post[1])
+            print("Points: %s" % post[6])
+            print("------------------------------")
+            self.cursor.execute("INSERT IGNORE INTO Seens (userID, postID) VALUES (%s, %s)",
+                            (self.current_user_id, post[0]))
+        self.cnx.commit()
+
+    def do_get_topic_posts(self, args):
+        if not self.current_user_id:
+            print("Please log in first")
+            return
+        topicname = input("Topic you want to see: ")
+        self.cursor.execute("SELECT topicID FROM Topics WHERE topicName = %s", (topicname,))
+        topicID = self.cursor.fetchone()
+        if not topicID:
+            print("Topic does not exist")
+            return
+        allTopics = []
+        toSearch = [topicID[0]]
+        #get all subtopics
+        while toSearch:
+            nextToSearch = []
+            for topicID in toSearch:
+                self.cursor.execute("SELECT topicID FROM Topics WHERE parentID = %s", (topicID,))
+                results = self.cursor.fetchall()
+                for result in results:
+                    nextToSearch.append(result[0])
+            allTopics.extend(toSearch)
+            toSearch = nextToSearch
+        serialize = "(" + str(allTopics[0])
+        for i in range(1, len(allTopics)):
+            serialize += (", " + str(allTopics[i]))
+        serialize += ")"
+        self.cursor.execute("SELECT * FROM view_post WHERE topicID IN " + serialize)
+        posts = self.cursor.fetchall()
+        if not posts:
+            print("No new posts! Follow for more!")
+        for post in posts:
+            print("PostID: %s" % post[0])
+            print("Topic: %s" % post[4])
+            print("Author: %s" % post[3])
+            print("Post Time: %s" % post[2])
+            if (post[5]): 
+                print("Reply to: %s" % post[5])
+            print("Content: %s" % post[1])
+            print("Points: %s" % post[6])
+            print("------------------------------")
+            self.cursor.execute("INSERT IGNORE INTO Seens (userID, postID) VALUES (%s, %s)",
+                            (self.current_user_id, post[0]))
+        self.cnx.commit()
+
+    def do_get_new_posts(self, args):
+        if not self.current_user_id:
+            print("Please log in first")
+            return
+        self.cursor.execute("SELECT topicID FROM FollowsTopic WHERE userID = %s", (self.current_user_id,))
+        results = self.cursor.fetchall()
+        allTopics = []
+        toSearch = []
+        for result in results:
+            toSearch.append(result[0])
+        #get all subtopics
+        while toSearch:
+            nextToSearch = []
+            for topicID in toSearch:
+                self.cursor.execute("SELECT topicID FROM Topics WHERE parentID = %s", (topicID,))
+                results = self.cursor.fetchall()
+                for result in results:
+                    nextToSearch.append(result[0])
+            allTopics.extend(toSearch)
+            toSearch = nextToSearch
+        serialize = "(" + str(allTopics[0])
+        for i in range(1, len(allTopics)):
+            serialize += (", " + str(allTopics[i]))
+        serialize += ")"
+        self.cursor.execute("SELECT * FROM view_post "
+                            "WHERE (userID IN (SELECT targetUserID FROM FollowsUser WHERE userID = %s) OR topicID IN " + serialize + ") "
+                            "AND postID NOT IN (SELECT postID FROM Seens WHERE userID = %s)",
+                            (self.current_user_id, self.current_user_id))
+        posts = self.cursor.fetchall()
+        if not posts:
+            print("Topic has no posts")
+        for post in posts:
+            print("PostID: %s" % post[0])
+            print("Topic: %s" % post[4])
+            print("Author: %s" % post[3])
+            print("Post Time: %s" % post[2])
+            if (post[5]): 
+                print("Reply to: %s" % post[5])
+            print("Content: %s" % post[1])
+            print("Points: %s" % post[6])
+            print("------------------------------")
+            self.cursor.execute("INSERT IGNORE INTO Seens (userID, postID) VALUES (%s, %s)",
+                            (self.current_user_id, post[0]))
+        self.cnx.commit()
+
     def do_thumb_up(self, arg):
         if not self.current_user_id:
             print("Please log in first")
@@ -227,6 +346,25 @@ class Client(cmd.Cmd):
             topics = self.cursor.fetchall()
             print ("Subtopics of {}:".format(selection))
         print("No subtopics!")
+
+    def do_get_follows(self, arg):
+        if not self.current_user_id:
+            print("Please log in first")
+            return
+        self.cursor.execute("SELECT alias FROM FollowsUser fu "
+                            "INNER JOIN Users u ON fu.targetUserID = u.userID "
+                            "WHERE fu.userID = %s", (self.current_user_id,))
+        users = self.cursor.fetchall()
+        print("Users you are following:")
+        for user in users:
+            print(user[0])
+        self.cursor.execute("SELECT topicName FROM FollowsTopic ft "
+                            "INNER JOIN Topics t ON ft.topicId = t.topicID "
+                            "WHERE ft.userID = %s", (self.current_user_id,))
+        topics = self.cursor.fetchall()
+        print("Topics you are following:")
+        for topic in topics:
+            print(topic[0])
 
     def do_follow(self, arg):
         if not self.current_user_id:
